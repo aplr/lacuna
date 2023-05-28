@@ -1,0 +1,17 @@
+{
+    "[go]": {
+        "editor.defaultFormatter": "golang.go",
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "editor.rulers": [88],
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        },
+        "editor.suggest.snippetsPreventQuickSuggestions": false
+    },
+    "gopls": {
+        "ui.semanticTokens": true,
+        "ui.diagnostic.staticcheck": true
+    },
+    "go.lintTool": "staticcheck"
+}
