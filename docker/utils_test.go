@@ -159,35 +159,3 @@ func TestExtractInvalidEventTypeFails(t *testing.T) {
 	// execute
 	extractEventType(action)
 }
-
-func TestExtractServiceNameReturnsDockerComposeName(t *testing.T) {
-	// setup
-	labels := map[string]string{
-		"com.docker.compose.service":          "service",
-		"com.docker.compose.project":          "project",
-		"com.docker.compose.container-number": "1",
-	}
-
-	// execute
-	serviceName := extractServiceName("2", labels)
-
-	// assert
-	if serviceName != "project_service_1" {
-		t.Errorf("expected service name to be 'project_service_1', got '%s'", serviceName)
-	}
-}
-
-func TestExtractServiceNameReturnsCommonName(t *testing.T) {
-	// setup
-	labels := map[string]string{
-		"org.opencontainers.image.title": "service",
-	}
-
-	// execute
-	serviceName := extractServiceName("1", labels)
-
-	// assert
-	if serviceName != "service-1" {
-		t.Errorf("expected service name to be 'service-1', got '%s'", serviceName)
-	}
-}

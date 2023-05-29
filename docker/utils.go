@@ -8,21 +8,6 @@ import (
 	"github.com/aplr/pubsub-emulator/models"
 )
 
-func extractServiceName(id string, labels map[string]string) string {
-	if _, ok := labels["com.docker.compose.project"]; ok {
-		return strings.Join([]string{
-			labels["com.docker.compose.project"],
-			labels["com.docker.compose.service"],
-			labels["com.docker.compose.container-number"],
-		}, "_")
-	}
-
-	return strings.Join([]string{
-		labels["org.opencontainers.image.title"],
-		id,
-	}, "-")
-}
-
 func extractSubscriptions(service string, labels map[string]string) []models.Subscription {
 	subscriptions := make([]models.Subscription, 0)
 	nameRegex := regexp.MustCompile(`^[a-zA-Z0-9-]+$`)

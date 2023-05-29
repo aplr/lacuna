@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aplr/pubsub-emulator/docker"
+	"github.com/aplr/pubsub-emulator/pubsub"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -29,11 +30,29 @@ func (app *App) Run(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: events
-	_, err = docker.Run(ctx)
+	// TODO: project id, even though it's not used by the emulator
+	_, err = pubsub.NewPubSub(ctx, "project-id")
 
 	if err != nil {
 		return err
+	}
+
+	// TODO: events
+	events, err := docker.Run(ctx)
+
+	if err != nil {
+		return err
+	}
+
+out:
+	for {
+		select {
+		case <-ctx.Done():
+			break out
+		case evt := <-events:
+			app.log.WithField("event", evt).Info("event received")
+			// pubsub.CreateSubscription(ctx, evt.Subscription)
+		}
 	}
 
 	return nil

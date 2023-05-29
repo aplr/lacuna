@@ -19,24 +19,25 @@ var (
 )
 
 type Docker struct {
-	log        *log.Entry
-	cli        *client.Client
-	containers map[string]Container
+	log *log.Entry
+	cli *client.Client
 }
 
 func NewDocker() (*Docker, error) {
 	log := log.WithField("component", "docker")
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithAPIVersionNegotiation(),
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &Docker{
-		cli:        cli,
-		log:        log,
-		containers: map[string]Container{},
+		cli: cli,
+		log: log,
 	}, nil
 }
 
@@ -44,7 +45,13 @@ func (docker *Docker) Run(ctx context.Context) (chan Event, error) {
 	out := make(chan Event)
 	defer close(out)
 
-	go docker.listenForContainerChanges(ctx, out)
+	run := make(chan bool)
+
+	go func() {
+		defer close(run)
+
+		docker.listenForContainerChanges(ctx, out)
+	}()
 
 	err := docker.handleInitialContainers(ctx, out)
 
@@ -52,10 +59,15 @@ func (docker *Docker) Run(ctx context.Context) (chan Event, error) {
 		return nil, err
 	}
 
+	<-run
+
 	return out, nil
 }
 
-func (docker *Docker) handleInitialContainers(ctx context.Context, out chan Event) error {
+func (docker *Docker) handleInitialContainers(
+	ctx context.Context,
+	out chan Event,
+) error {
 	containers, err := docker.cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(
 			filters.KeyValuePair{Key: "label", Value: filterLabel},
@@ -67,8 +79,7 @@ func (docker *Docker) handleInitialContainers(ctx context.Context, out chan Even
 	}
 
 	for _, c := range containers {
-		// TODO: verify if container name is valid
-		container := NewContainer(c.ID, c.Names[0], c.Labels)
+		container := NewContainer(c.ID, c.Labels)
 		docker.handleContainer(ctx, EVENT_TYPE_SUBSCRIBE, container, out)
 	}
 
@@ -99,23 +110,32 @@ func (docker *Docker) listenForContainerChanges(ctx context.Context, out chan Ev
 	}
 }
 
-func (docker *Docker) handleMessage(ctx context.Context, message events.Message, out chan Event) {
+func (docker *Docker) handleMessage(
+	ctx context.Context,
+	message events.Message,
+	out chan Event,
+) {
+	docker.log.WithField("type", "message").WithField("message", message).Debug("message received")
+
 	eventType := extractEventType(message.Action)
 
 	container := NewContainer(
 		message.Actor.ID,
-		// TODO: verify if container name is valid
-		message.Actor.Attributes["name"],
 		message.Actor.Attributes,
 	)
 
 	docker.handleContainer(ctx, eventType, container, out)
-
-	docker.log.WithField("type", "message").Debug(message.Actor.Attributes["image"], " ", message.Type, " ", message.Action)
 }
 
-func (docker *Docker) handleContainer(ctx context.Context, eventType EventType, container Container, out chan Event) {
-	subscriptions := extractSubscriptions(container.Name, container.Labels)
+func (docker *Docker) handleContainer(
+	ctx context.Context,
+	eventType EventType,
+	container Container,
+	out chan Event,
+) {
+	docker.log.WithField("type", "event").WithField("event", eventType).WithField("container", container.Name).Debug("processing event")
+
+	subscriptions := extractSubscriptions(container.Name(), container.Labels)
 
 	for _, subscription := range subscriptions {
 		out <- Event{
@@ -128,5 +148,5 @@ func (docker *Docker) handleContainer(ctx context.Context, eventType EventType, 
 
 func (docker *Docker) handleError(ctx context.Context, err error) {
 	// TODO: handle error
-	docker.log.WithField("type", "error").Error(err)
+	docker.log.WithField("type", "error").WithError(err).Error("error received")
 }
