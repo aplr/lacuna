@@ -20,8 +20,12 @@ func (container *Container) Name() string {
 		}, "-")
 	}
 
-	return strings.Join([]string{
-		container.Labels["org.opencontainers.image.title"],
-		container.ID,
-	}, "-")
+	if _, ok := container.Labels["org.opencontainers.image.title"]; ok {
+		return strings.Join([]string{
+			container.Labels["org.opencontainers.image.title"],
+			container.ID,
+		}, "-")
+	}
+
+	return container.ID
 }

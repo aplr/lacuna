@@ -33,3 +33,16 @@ func TestExtractServiceNameReturnsCommonName(t *testing.T) {
 		t.Errorf("expected service name to be 'service-1', got '%s'", serviceName)
 	}
 }
+
+func TestExtractServiceNameReturnsId(t *testing.T) {
+	// setup
+	container := NewContainer("1", map[string]string{})
+
+	// execute
+	serviceName := container.Name()
+
+	// assert
+	if serviceName != "1" {
+		t.Errorf("expected service name to be '1', got '%s'", serviceName)
+	}
+}

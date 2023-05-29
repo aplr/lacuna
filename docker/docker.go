@@ -12,18 +12,26 @@ import (
 )
 
 var (
-	labelPrefix          = "pubsub"
-	filterLabel          = labelPrefix + ".enabled=true"
-	subscribeEventName   = "start" // TODO: evaluate event
-	unsubscribeEventName = "stop"  // TODO: evaluate event
+	labelPrefix    = "pubsub"
+	filterLabel    = labelPrefix + ".enabled=true"
+	startEventName = "start" // TODO: evaluate event
+	stopEventName  = "stop"  // TODO: evaluate event
 )
 
-type Docker struct {
+type Docker interface {
+	Run(ctx context.Context) (<-chan Event, error)
+}
+
+var _ = Docker(&dockerImpl{})
+
+type dockerImpl struct {
+	Docker
+
 	log *log.Entry
 	cli *client.Client
 }
 
-func NewDocker() (*Docker, error) {
+func NewDocker() (Docker, error) {
 	log := log.WithField("component", "docker")
 
 	cli, err := client.NewClientWithOpts(
@@ -35,13 +43,13 @@ func NewDocker() (*Docker, error) {
 		return nil, err
 	}
 
-	return &Docker{
+	return &dockerImpl{
 		cli: cli,
 		log: log,
 	}, nil
 }
 
-func (docker *Docker) Run(ctx context.Context) (chan Event, error) {
+func (docker *dockerImpl) Run(ctx context.Context) (<-chan Event, error) {
 	out := make(chan Event)
 	defer close(out)
 
@@ -64,7 +72,7 @@ func (docker *Docker) Run(ctx context.Context) (chan Event, error) {
 	return out, nil
 }
 
-func (docker *Docker) handleInitialContainers(
+func (docker *dockerImpl) handleInitialContainers(
 	ctx context.Context,
 	out chan Event,
 ) error {
@@ -80,13 +88,13 @@ func (docker *Docker) handleInitialContainers(
 
 	for _, c := range containers {
 		container := NewContainer(c.ID, c.Labels)
-		docker.handleContainer(ctx, EVENT_TYPE_SUBSCRIBE, container, out)
+		docker.handleContainer(ctx, EVENT_TYPE_START, container, out)
 	}
 
 	return nil
 }
 
-func (docker *Docker) listenForContainerChanges(ctx context.Context, out chan Event) {
+func (docker *dockerImpl) listenForContainerChanges(ctx context.Context, out chan Event) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -94,8 +102,8 @@ func (docker *Docker) listenForContainerChanges(ctx context.Context, out chan Ev
 		Filters: filters.NewArgs(
 			filters.KeyValuePair{Key: "type", Value: "container"},
 			filters.KeyValuePair{Key: "label", Value: filterLabel},
-			filters.KeyValuePair{Key: "event", Value: subscribeEventName},
-			filters.KeyValuePair{Key: "event", Value: unsubscribeEventName},
+			filters.KeyValuePair{Key: "event", Value: startEventName},
+			filters.KeyValuePair{Key: "event", Value: stopEventName},
 		),
 	})
 
@@ -110,14 +118,14 @@ func (docker *Docker) listenForContainerChanges(ctx context.Context, out chan Ev
 	}
 }
 
-func (docker *Docker) handleMessage(
+func (docker *dockerImpl) handleMessage(
 	ctx context.Context,
 	message events.Message,
 	out chan Event,
 ) {
 	docker.log.WithField("type", "message").WithField("message", message).Debug("message received")
 
-	eventType := extractEventType(message.Action)
+	eventType := mapEventType(message.Action)
 
 	container := NewContainer(
 		message.Actor.ID,
@@ -127,7 +135,7 @@ func (docker *Docker) handleMessage(
 	docker.handleContainer(ctx, eventType, container, out)
 }
 
-func (docker *Docker) handleContainer(
+func (docker *dockerImpl) handleContainer(
 	ctx context.Context,
 	eventType EventType,
 	container Container,
@@ -135,18 +143,13 @@ func (docker *Docker) handleContainer(
 ) {
 	docker.log.WithField("type", "event").WithField("event", eventType).WithField("container", container.Name).Debug("processing event")
 
-	subscriptions := extractSubscriptions(container.Name(), container.Labels)
-
-	for _, subscription := range subscriptions {
-		out <- Event{
-			Type:         eventType,
-			Container:    container,
-			Subscription: subscription,
-		}
+	out <- Event{
+		Type:      eventType,
+		Container: container,
 	}
 }
 
-func (docker *Docker) handleError(ctx context.Context, err error) {
+func (docker *dockerImpl) handleError(ctx context.Context, err error) {
 	// TODO: handle error
 	docker.log.WithField("type", "error").WithError(err).Error("error received")
 }

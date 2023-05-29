@@ -1,16 +1,13 @@
 package docker
 
-import "github.com/aplr/pubsub-emulator/models"
-
 type EventType string
 
 const (
-	EVENT_TYPE_SUBSCRIBE   EventType = "subscribe"
-	EVENT_TYPE_UNSUBSCRIBE EventType = "unsubscribe"
+	EVENT_TYPE_START EventType = "start"
+	EVENT_TYPE_STOP  EventType = "stop"
 )
 
 type Event struct {
-	Type         EventType           // subscribe to or unsubscribe from the topic
-	Container    Container           // container that was started or stopped
-	Subscription models.Subscription // subscription metadata
+	Type      EventType // start or stop
+	Container Container // container that was started or stopped
 }
