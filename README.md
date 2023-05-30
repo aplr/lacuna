@@ -59,6 +59,8 @@ Lacuna is configured using docker labels. The following labels are supported:
 
 ### Subscription Options
 
+For each subscription, the following options can be set. For a detailed description of each option, see the [Pub/Sub API documentation](https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions).
+
 | Option                              | Description                                                        |
 | ----------------------------------- | ------------------------------------------------------------------ |
 | `ack-deadline`                      | The number of seconds the subscriber has to acknowledge a message. |
