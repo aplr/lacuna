@@ -7,12 +7,17 @@ services:
     environment:
       DHPARAM_GENERATION: false
     ports:
-      - "80:3080"
+      - "5080:80"
+      - "5443:443"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:
+      lacuna.enabled: true
+      lacuna.subscription.test.topic: test
+      lacuna.subscription.test.endpoint: http://nginx/messages
   pubsub:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
-    command: gcloud beta emulators pubsub start --project=pubsub
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=pubsub
     restart: unless-stopped
     ports:
-      - "8085:3081"
+      - "8085:8085"

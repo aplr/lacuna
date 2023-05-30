@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -26,11 +25,10 @@ func (d *Daemon) Run(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	var wg sync.WaitGroup
+	done := make(chan bool)
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer func() { done <- true }()
 		err := d.app.Run(ctx)
 
 		if err != nil {
@@ -53,5 +51,5 @@ func (d *Daemon) Run(ctx context.Context) {
 
 	log.Info("Shutting down lacuna...")
 
-	wg.Wait()
+	<-done
 }

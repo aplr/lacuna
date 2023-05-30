@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	labelPrefix    = "pubsub"
+	labelPrefix    = "lacuna"
 	filterLabel    = labelPrefix + ".enabled=true"
 	startEventName = "start" // TODO: evaluate event
 	stopEventName  = "stop"  // TODO: evaluate event
@@ -113,8 +113,6 @@ func (docker *dockerImpl) handleMessage(
 	message events.Message,
 	out chan Event,
 ) {
-	docker.log.WithField("type", "message").WithField("message", message).Debug("message received")
-
 	eventType := mapEventType(message.Action)
 
 	container := NewContainer(
@@ -131,7 +129,7 @@ func (docker *dockerImpl) handleContainer(
 	container Container,
 	out chan Event,
 ) {
-	docker.log.WithField("type", "event").WithField("event", eventType).WithField("container", container.Name).Debug("processing event")
+	docker.log.WithField("event", eventType).WithField("container", container.Name()).Debug("processing event")
 
 	out <- Event{
 		Type:      eventType,
@@ -141,5 +139,5 @@ func (docker *dockerImpl) handleContainer(
 
 func (docker *dockerImpl) handleError(ctx context.Context, err error) {
 	// TODO: handle error
-	docker.log.WithField("type", "error").WithError(err).Error("error received")
+	docker.log.WithError(err).Error("error received")
 }

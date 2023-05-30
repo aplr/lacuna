@@ -8,10 +8,10 @@ import (
 )
 
 func TestExtractSubscriptionsSucceedsWithoutLabels(t *testing.T) {
-	// setup
+	// arrange
 	container := docker.NewContainer("1", map[string]string{})
 
-	// execute
+	// act
 	subscriptions := extractSubscriptions(container)
 
 	// assert
@@ -21,13 +21,13 @@ func TestExtractSubscriptionsSucceedsWithoutLabels(t *testing.T) {
 }
 
 func TestExtractSubscriptionsExtractsValidSubscriptions(t *testing.T) {
-	// setup
+	// arrange
 	container := docker.NewContainer("1", map[string]string{
-		"pubsub.subscription.test.topic":    "test-topic",
-		"pubsub.subscription.test.endpoint": "/messages",
+		"lacuna.subscription.test.topic":    "test-topic",
+		"lacuna.subscription.test.endpoint": "/messages",
 	})
 
-	// execute
+	// act
 	subscriptions := extractSubscriptions(container)
 
 	// assert
@@ -49,15 +49,15 @@ func TestExtractSubscriptionsExtractsValidSubscriptions(t *testing.T) {
 }
 
 func TestExtractSubscriptionsExtractsMultipleSubscriptions(t *testing.T) {
-	// setup
+	// arrange
 	container := docker.NewContainer("1", map[string]string{
-		"pubsub.subscription.test-1.topic":    "test-topic-1",
-		"pubsub.subscription.test-1.endpoint": "/messages",
-		"pubsub.subscription.test-2.topic":    "test-topic-2",
-		"pubsub.subscription.test-2.endpoint": "/messages",
+		"lacuna.subscription.test-1.topic":    "test-topic-1",
+		"lacuna.subscription.test-1.endpoint": "/messages",
+		"lacuna.subscription.test-2.topic":    "test-topic-2",
+		"lacuna.subscription.test-2.endpoint": "/messages",
 	})
 
-	// execute
+	// act
 	subscriptions := extractSubscriptions(container)
 
 	// for assertion to succeed despite order of subscriptions
@@ -81,12 +81,12 @@ func TestExtractSubscriptionsExtractsMultipleSubscriptions(t *testing.T) {
 }
 
 func TestExtractSubscriptionSkipsIncompleteSubscriptions(t *testing.T) {
-	// setup
+	// arrange
 	container := docker.NewContainer("1", map[string]string{
-		"pubsub.subscription.test.topic": "test-topic",
+		"lacuna.subscription.test.topic": "test-topic",
 	})
 
-	// execute
+	// act
 	subscriptions := extractSubscriptions(container)
 
 	// assert
@@ -96,13 +96,13 @@ func TestExtractSubscriptionSkipsIncompleteSubscriptions(t *testing.T) {
 }
 
 func TestExtractSubscriptionsSkipsUnknownLabels(t *testing.T) {
-	// setup
+	// arrange
 	container := docker.NewContainer("1", map[string]string{
 		"name":           "foobar",
 		"my.other.label": "other-label",
 	})
 
-	// execute
+	// act
 	subscriptions := extractSubscriptions(container)
 
 	// assert
@@ -112,16 +112,16 @@ func TestExtractSubscriptionsSkipsUnknownLabels(t *testing.T) {
 }
 
 func TestExtractSubscriptionsSkipsInvalidLabels(t *testing.T) {
-	// setup
+	// arrange
 	container := docker.NewContainer("1", map[string]string{
-		"pubsub.subscription.my_name.topic":    "invalid-name",
-		"pubsub.subscription.my_name.endpoint": "invalid-name",
-		"pubsub.subscription.test.foobar":      "invalid-field",
-		"pubsub.subscription.x.y.z":            "invalid-key",
-		"pubsub.subscription.x":                "invalid-key",
+		"lacuna.subscription.my_name.topic":    "invalid-name",
+		"lacuna.subscription.my_name.endpoint": "invalid-name",
+		"lacuna.subscription.test.foobar":      "invalid-field",
+		"lacuna.subscription.x.y.z":            "invalid-key",
+		"lacuna.subscription.x":                "invalid-key",
 	})
 
-	// execute
+	// act
 	subscriptions := extractSubscriptions(container)
 
 	// assert

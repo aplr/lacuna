@@ -1,12 +1,12 @@
 package app
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/aplr/lacuna/docker"
 	"github.com/aplr/lacuna/pubsub"
+	log "github.com/sirupsen/logrus"
 )
 
 func extractSubscriptions(container docker.Container) []pubsub.Subscription {
@@ -27,13 +27,13 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 
 		// Check that the key has the correct number of parts
 		if len(keyParts) != 4 {
-			fmt.Printf("invalid subscription key: %s, must be in the format 'pubsub.subscription.<name>.<topic|endpoint>'\n", key)
+			log.Printf("invalid subscription key: %s, must be in the format 'lacuna.subscription.<name>.<topic|endpoint>'\n", key)
 			continue
 		}
 
 		// Check that the subscription name is valid
 		if !nameRegex.MatchString(keyParts[2]) {
-			fmt.Printf("invalid subscription name in key: %s, subscription name should be alphanumeric and may contain dashes\n", key)
+			log.Printf("invalid subscription name in key: %s, subscription name should be alphanumeric and may contain dashes\n", key)
 			continue
 		}
 
@@ -54,7 +54,7 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 		case "endpoint":
 			subscriptionMap[name].Endpoint = value
 		default:
-			fmt.Printf("skipping invalid subscription key: %s, must be one of 'topic' or 'endpoint'\n", key)
+			log.Printf("skipping invalid subscription key: %s, must be one of 'topic' or 'endpoint'\n", key)
 		}
 
 	}
@@ -65,7 +65,7 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 			// Only include subscriptions with both topic and endpoint populated
 			subscriptions = append(subscriptions, *subscription)
 		} else {
-			fmt.Printf("skipping incomplete subscription: %s, both topic and endpoint must be provided\n", subscription.Name)
+			log.Printf("skipping incomplete subscription: %s, both topic and endpoint must be provided\n", subscription.Name)
 		}
 	}
 

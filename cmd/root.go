@@ -38,7 +38,7 @@ func init() {
 
 func initConfig() {
 	// Environment
-	// viper.SetEnvPrefix("LICTORES")
+	// viper.SetEnvPrefix("lacuna")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetConfigName("default")
 	viper.SetConfigType("env")
@@ -51,15 +51,15 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
-			log.Debug("No config file found, using environment variables.")
+			log.Debug("no config file found, using environment variables")
 		} else if _, ok := err.(*fs.PathError); ok {
-			log.Debug("Specified config file not found, using environment variables.")
+			log.Debug("specified config file not found, using environment variables")
 		} else {
 			// Config file was found but another error was produced
 			panic(fmt.Errorf("fatal error config file: %w", err))
 		}
 	} else {
-		log.Infof("Config loaded from %s.", viper.ConfigFileUsed())
+		log.Infof("config loaded from %s.", viper.ConfigFileUsed())
 	}
 }
 

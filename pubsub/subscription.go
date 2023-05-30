@@ -11,5 +11,5 @@ type Subscription struct {
 }
 
 func (s *Subscription) GetSubscriptionID() string {
-	return strings.Join([]string{s.Service, s.Name}, ":")
+	return strings.Join([]string{s.Service, s.Name}, "_")
 }

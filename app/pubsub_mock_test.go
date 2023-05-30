@@ -3,14 +3,13 @@ package app
 import (
 	"context"
 
-	"github.com/aplr/lacuna/docker"
 	"github.com/aplr/lacuna/pubsub"
 )
 
 var _ = pubsub.PubSub(&mockPubSub{})
 
 type mockPubSub struct {
-	docker.Docker
+	pubsub.PubSub
 
 	createSubscription func(ctx context.Context, subscription pubsub.Subscription) error
 	deleteSubscription func(ctx context.Context, subscription pubsub.Subscription) error

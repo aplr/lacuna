@@ -3,14 +3,14 @@ package docker
 import "testing"
 
 func TestExtractServiceNameReturnsDockerComposeName(t *testing.T) {
-	// setup
+	// arrange
 	container := NewContainer("2", map[string]string{
 		"com.docker.compose.service":          "service",
 		"com.docker.compose.project":          "project",
 		"com.docker.compose.container-number": "1",
 	})
 
-	// execute
+	// act
 	serviceName := container.Name()
 
 	// assert
@@ -20,12 +20,12 @@ func TestExtractServiceNameReturnsDockerComposeName(t *testing.T) {
 }
 
 func TestExtractServiceNameReturnsCommonName(t *testing.T) {
-	// setup
+	// arrange
 	container := NewContainer("1", map[string]string{
 		"org.opencontainers.image.title": "service",
 	})
 
-	// execute
+	// act
 	serviceName := container.Name()
 
 	// assert
@@ -35,10 +35,10 @@ func TestExtractServiceNameReturnsCommonName(t *testing.T) {
 }
 
 func TestExtractServiceNameReturnsId(t *testing.T) {
-	// setup
+	// arrange
 	container := NewContainer("1", map[string]string{})
 
-	// execute
+	// act
 	serviceName := container.Name()
 
 	// assert

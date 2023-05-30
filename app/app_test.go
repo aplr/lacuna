@@ -102,8 +102,8 @@ func TestRunHandlesContainerStartEvent(t *testing.T) {
 	events <- docker.Event{
 		Type: docker.EVENT_TYPE_START,
 		Container: docker.NewContainer("1", map[string]string{
-			"pubsub.subscription.test.topic":    "test",
-			"pubsub.subscription.test.endpoint": "/messages",
+			"lacuna.subscription.test.topic":    "test",
+			"lacuna.subscription.test.endpoint": "/messages",
 		}),
 	}
 
@@ -148,8 +148,8 @@ func TestRunHandlesContainerStopEvent(t *testing.T) {
 	events <- docker.Event{
 		Type: docker.EVENT_TYPE_STOP,
 		Container: docker.NewContainer("1", map[string]string{
-			"pubsub.subscription.test.topic":    "test",
-			"pubsub.subscription.test.endpoint": "/messages",
+			"lacuna.subscription.test.topic":    "test",
+			"lacuna.subscription.test.endpoint": "/messages",
 		}),
 	}
 

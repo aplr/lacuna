@@ -9,6 +9,8 @@ PKG_LIST := $(shell go list ./... | grep -v /vendor/)
 
 .PHONY: all build clean test test-unit test-race test-msan staticcheck vet
 
+export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
+
 all: build
 
 build:

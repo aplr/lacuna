@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/aplr/lacuna/cmd"
-	log "github.com/sirupsen/logrus"
 )
 
 var Version string
@@ -18,5 +17,5 @@ func main() {
 }
 
 func init() {
-	log.SetFormatter(&log.JSONFormatter{})
+	// log.SetFormatter(&log.JSONFormatter{})
 }

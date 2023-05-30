@@ -2,7 +2,7 @@ package pubsub
 
 import "testing"
 
-func TestGetSubscriptionIdSuccess(t *testing.T) {
+func TestGetSubscriptionId(t *testing.T) {
 	subscription := Subscription{
 		Service: "payment",
 		Name:    "product-created",
@@ -10,7 +10,7 @@ func TestGetSubscriptionIdSuccess(t *testing.T) {
 
 	subscriptionId := subscription.GetSubscriptionID()
 
-	if subscriptionId != "payment:product-created" {
-		t.Errorf("Expected subscriptionId to be 'payment:product-created, got %s", subscriptionId)
+	if subscriptionId != "payment_product-created" {
+		t.Errorf("Expected subscriptionId to be 'payment_product-created, got %s", subscriptionId)
 	}
 }

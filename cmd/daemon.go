@@ -19,7 +19,7 @@ var daemonCmd = &cobra.Command{
 }
 
 func runDaemon(cmd *cobra.Command, args []string) {
-	log.Infof("Lacuna version %s starting", cmd.Root().Version)
+	log.Infof("lacuna version %s starting", cmd.Root().Version)
 
 	ctx := context.Background()
 

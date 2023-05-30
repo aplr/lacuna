@@ -5,12 +5,12 @@ import (
 )
 
 func TestMapValidEventTypeSucceeds(t *testing.T) {
-	// setup
+	// arrange
 	actions := []string{startEventName, stopEventName}
 	eventTypes := []EventType{EVENT_TYPE_START, EVENT_TYPE_STOP}
 	extractedEventTypes := make([]EventType, 0)
 
-	// execute
+	// act
 	for _, action := range actions {
 		extractedEventTypes = append(extractedEventTypes, mapEventType(action))
 	}
@@ -24,7 +24,7 @@ func TestMapValidEventTypeSucceeds(t *testing.T) {
 }
 
 func TestMapInvalidEventTypeFails(t *testing.T) {
-	// setup
+	// arrange
 	action := "foobar"
 	defer func() {
 		if r := recover(); r == nil {
@@ -32,6 +32,6 @@ func TestMapInvalidEventTypeFails(t *testing.T) {
 		}
 	}()
 
-	// execute
+	// act
 	mapEventType(action)
 }

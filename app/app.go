@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/aplr/lacuna/docker"
 	"github.com/aplr/lacuna/pubsub"
@@ -9,7 +10,7 @@ import (
 )
 
 var (
-	labelPrefix = "pubsub"
+	labelPrefix = "lacuna"
 )
 
 type App struct {
@@ -35,7 +36,7 @@ func NewDefaultApp(ctx context.Context) *App {
 		log.Fatal(err)
 	}
 
-	pubsub, err := pubsub.NewPubSub(ctx, "project-id")
+	pubsub, err := pubsub.NewPubSub(ctx, "pubsub")
 
 	if err != nil {
 		log.Fatal(err)
@@ -60,7 +61,7 @@ out:
 		case <-ctx.Done():
 			break out
 		case evt := <-events:
-			app.handleContainerEvent(ctx, evt)
+			go app.handleContainerEvent(ctx, evt)
 		}
 	}
 
@@ -68,16 +69,34 @@ out:
 }
 
 func (app *App) handleContainerEvent(ctx context.Context, evt docker.Event) {
-	app.log.WithField("event", evt).Debug("event received")
+	log := app.log.WithField("event_type", evt.Type).WithField("container", evt.Container.Name())
 
 	subscriptions := extractSubscriptions(evt.Container)
 
+	if (len(subscriptions)) == 0 {
+		log.Warn("no subscriptions found")
+		return
+	}
+
+	log.Debugf("processing %d subscriptions", len(subscriptions))
+
 	for _, subscription := range subscriptions {
-		switch evt.Type {
-		case docker.EVENT_TYPE_START:
-			app.pubsub.CreateSubscription(ctx, subscription)
-		case docker.EVENT_TYPE_STOP:
-			app.pubsub.DeleteSubscription(ctx, subscription)
+		app.processSubscription(ctx, subscription, evt.Type)
+	}
+}
+
+func (app *App) processSubscription(ctx context.Context, subscription pubsub.Subscription, eventType docker.EventType) {
+	ctx, cancel := context.WithTimeout(ctx, 5000*time.Millisecond)
+	defer cancel()
+
+	switch eventType {
+	case docker.EVENT_TYPE_START:
+		if err := app.pubsub.CreateSubscription(ctx, subscription); err != nil {
+			app.log.WithError(err).Error("failed to create subscription")
+		}
+	case docker.EVENT_TYPE_STOP:
+		if err := app.pubsub.DeleteSubscription(ctx, subscription); err != nil {
+			app.log.WithError(err).Error("failed to delete subscription")
 		}
 	}
 }
