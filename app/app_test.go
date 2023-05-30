@@ -9,35 +9,6 @@ import (
 	"github.com/aplr/pubsub-emulator/pubsub"
 )
 
-var _ = docker.Docker(&mockDocker{})
-
-type mockDocker struct {
-	docker.Docker
-
-	run func(ctx context.Context) (<-chan docker.Event, error)
-}
-
-func (d *mockDocker) Run(ctx context.Context) (<-chan docker.Event, error) {
-	return d.run(ctx)
-}
-
-var _ = pubsub.PubSub(&mockPubSub{})
-
-type mockPubSub struct {
-	docker.Docker
-
-	createSubscription func(ctx context.Context, subscription pubsub.Subscription) error
-	deleteSubscription func(ctx context.Context, subscription pubsub.Subscription) error
-}
-
-func (ps *mockPubSub) CreateSubscription(ctx context.Context, subscription pubsub.Subscription) error {
-	return ps.createSubscription(ctx, subscription)
-}
-
-func (ps *mockPubSub) DeleteSubscription(ctx context.Context, subscription pubsub.Subscription) error {
-	return ps.deleteSubscription(ctx, subscription)
-}
-
 func TestNewAppCreatesNewApp(t *testing.T) {
 	docker := &mockDocker{}
 	pubsub := &mockPubSub{}

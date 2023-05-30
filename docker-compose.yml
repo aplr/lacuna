@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    environment:
+      DHPARAM_GENERATION: false
+    ports:
+      - "80:3080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators pubsub start --project=pubsub
+    restart: unless-stopped
+    ports:
+      - "8085:3081"

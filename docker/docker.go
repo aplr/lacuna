@@ -28,12 +28,10 @@ type dockerImpl struct {
 	Docker
 
 	log *log.Entry
-	cli *client.Client
+	cli client.APIClient
 }
 
 func NewDocker() (Docker, error) {
-	log := log.WithField("component", "docker")
-
 	cli, err := client.NewClientWithOpts(
 		client.FromEnv,
 		client.WithAPIVersionNegotiation(),
@@ -43,31 +41,27 @@ func NewDocker() (Docker, error) {
 		return nil, err
 	}
 
+	return NewDockerWithClient(cli), nil
+}
+
+func NewDockerWithClient(cli client.APIClient) Docker {
+	log := log.WithField("component", "docker")
+
 	return &dockerImpl{
 		cli: cli,
 		log: log,
-	}, nil
+	}
 }
 
 func (docker *dockerImpl) Run(ctx context.Context) (<-chan Event, error) {
 	out := make(chan Event)
-	defer close(out)
-
-	run := make(chan bool)
 
 	go func() {
-		defer close(run)
+		defer close(out)
 
+		docker.handleInitialContainers(ctx, out)
 		docker.listenForContainerChanges(ctx, out)
 	}()
-
-	err := docker.handleInitialContainers(ctx, out)
-
-	if err != nil {
-		return nil, err
-	}
-
-	<-run
 
 	return out, nil
 }
@@ -76,15 +70,11 @@ func (docker *dockerImpl) handleInitialContainers(
 	ctx context.Context,
 	out chan Event,
 ) error {
-	containers, err := docker.cli.ContainerList(ctx, types.ContainerListOptions{
+	containers, _ := docker.cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(
 			filters.KeyValuePair{Key: "label", Value: filterLabel},
 		),
 	})
-
-	if err != nil {
-		return err
-	}
 
 	for _, c := range containers {
 		container := NewContainer(c.ID, c.Labels)
