@@ -101,6 +101,13 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 			subscriptionMap[name].DeliverExactlyOnce = deliver
 		case "dead-letter-topic":
 			subscriptionMap[name].DeadLetterTopic = value
+		case "max-dead-letter-delivery-attempts":
+			attempts, err := strconv.Atoi(value)
+			if err != nil {
+				log.Printf("invalid max-dead-letter-delivery-attempts value: %s, must be a valid integer\n", value)
+				continue
+			}
+			subscriptionMap[name].MaxDeadLetterDeliveryAttempts = attempts
 		case "retry-minimum-backoff":
 			backoff, err := time.ParseDuration(value)
 			if err != nil {

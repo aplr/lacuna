@@ -52,18 +52,19 @@ func TestExtractSubscriptionsExtractsValidSubscriptions(t *testing.T) {
 func TestExtractSubscriptionsExtractsValidSubscriptionOptions(t *testing.T) {
 	// arrange
 	container := docker.NewContainer("1", map[string]string{
-		"lacuna.subscription.test.topic":                 "test-topic",
-		"lacuna.subscription.test.endpoint":              "/messages",
-		"lacuna.subscription.test.ack-deadline":          "10s",
-		"lacuna.subscription.test.retain-acked-messages": "true",
-		"lacuna.subscription.test.retention-duration":    "24h",
-		"lacuna.subscription.test.enable-ordering":       "true",
-		"lacuna.subscription.test.expiration-ttl":        "5s",
-		"lacuna.subscription.test.filter":                "foo=bar",
-		"lacuna.subscription.test.deliver-exactly-once":  "true",
-		"lacuna.subscription.test.dead-letter-topic":     "dead-letter-topic",
-		"lacuna.subscription.test.retry-minimum-backoff": "10s",
-		"lacuna.subscription.test.retry-maximum-backoff": "10s",
+		"lacuna.subscription.test.topic":                             "test-topic",
+		"lacuna.subscription.test.endpoint":                          "/messages",
+		"lacuna.subscription.test.ack-deadline":                      "10s",
+		"lacuna.subscription.test.retain-acked-messages":             "true",
+		"lacuna.subscription.test.retention-duration":                "24h",
+		"lacuna.subscription.test.enable-ordering":                   "true",
+		"lacuna.subscription.test.expiration-ttl":                    "5s",
+		"lacuna.subscription.test.filter":                            "foo=bar",
+		"lacuna.subscription.test.deliver-exactly-once":              "true",
+		"lacuna.subscription.test.dead-letter-topic":                 "dead-letter-topic",
+		"lacuna.subscription.test.max-dead-letter-delivery-attempts": "10",
+		"lacuna.subscription.test.retry-minimum-backoff":             "10s",
+		"lacuna.subscription.test.retry-maximum-backoff":             "10s",
 	})
 
 	// act
@@ -116,6 +117,10 @@ func TestExtractSubscriptionsExtractsValidSubscriptionOptions(t *testing.T) {
 
 	if subscriptions[0].DeadLetterTopic != "dead-letter-topic" {
 		t.Errorf("expected dead-letter-topic to be 'dead-letter-topic', got '%s'", subscriptions[0].DeadLetterTopic)
+	}
+
+	if subscriptions[0].MaxDeadLetterDeliveryAttempts != 10 {
+		t.Errorf("expected max-dead-letter-delivery-attempts to be 10, got '%d'", subscriptions[0].MaxDeadLetterDeliveryAttempts)
 	}
 
 	if *subscriptions[0].RetryMinimumBackoff != 10*time.Second {

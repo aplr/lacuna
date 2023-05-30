@@ -50,12 +50,28 @@ services:
 
 Lacuna is configured using docker labels. The following labels are supported:
 
-| Label                                 | Description                                                                        | Required |
-| ------------------------------------- | ---------------------------------------------------------------------------------- | -------- |
-| `lacuna.enabled`                      | Enables Lacuna for the container.                                                  | Yes      |
-| `lacuna.subscription.<name>.topic`    | The name of the topic to subscribe to.                                             | Yes      |
-| `lacuna.subscription.<name>.endpoint` | The endpoint to send messages to.                                                  | Yes      |
-| `lacuna.subscription.<name>.deadline` | The number of seconds to wait for an acknowledgement before resending the message. | No       |
+| Label                                 | Description                            | Required |
+| ------------------------------------- | -------------------------------------- | -------- |
+| `lacuna.enabled`                      | Enables Lacuna for the container.      | Yes      |
+| `lacuna.subscription.<name>.topic`    | The name of the topic to subscribe to. | Yes      |
+| `lacuna.subscription.<name>.endpoint` | The endpoint to send messages to.      | Yes      |
+| `lacuna.subscription.<name>.<option>` | See options below.                     | No       |
+
+### Subscription Options
+
+| Option                              | Description                                                        |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `ack-deadline`                      | The number of seconds the subscriber has to acknowledge a message. |
+| `retain-acked-messages`             | Whether to retain acknowledged messages.                           |
+| `retention-duration`                | The number of seconds to retain acknowledged messages.             |
+| `enable-ordering`                   | Whether to enable message ordering.                                |
+| `expiration-ttl`                    | The number of seconds a message can be retained.                   |
+| `filter`                            | A filter expression.                                               |
+| `deliver-exactly-once`              | Whether to deliver messages exactly once.                          |
+| `dead-letter-topic`                 | The name of the dead letter topic.                                 |
+| `max-dead-letter-delivery-attempts` | The maximum number of delivery attempts for a message.             |
+| `retry-minimum-backoff`             | The minimum backoff time for retrying a message.                   |
+| `retry-maximum-backoff`             | The maximum backoff time for retrying a message.                   |
 
 ## Acknowledgements
 
