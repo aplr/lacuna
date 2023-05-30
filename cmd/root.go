@@ -16,7 +16,7 @@ var (
 	verbosity int
 
 	rootCmd = &cobra.Command{
-		Use:   "pubsub",
+		Use:   "lacuna",
 		Short: "",
 	}
 )
