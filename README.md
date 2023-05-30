@@ -4,7 +4,7 @@ Lacuna is a Kubernetes-style operator that runs locally on your machine and mana
 
 ## Overview
 
-While testing locally, it is often useful to have a local Pub/Sub emulator running to simulate the behavior of a real Pub/Sub instance. However, it can be tedious to manually create topics and subscriptions for each docker container that needs to interact with Pub/Sub. For Pub/Sub this is especially true because topics and subscriptions can not be created using the gcloud CLI, but must be created using a proper Pub/Sub API client. Lacuna aims to solve this problem by creating topics and subscriptions for each container that needs to interact with Pub/Sub just by using docker labels.
+While testing locally, having a local Pub/Sub emulator helps to replicate the behavior of the production environment. However, it can be tedious to manually create topics and subscriptions for each service that needs to interact with Pub/Sub. For Pub/Sub this is especially true because topics and subscriptions can not be created using the gcloud CLI, but must be created using a proper Pub/Sub API client. Lacuna aims to solve this by creating topics and subscriptions for each container that needs to interact with Pub/Sub just by using docker labels.
 
 ### Limitations
 
@@ -13,6 +13,10 @@ Currently, Lacuna only supports Google Cloud Pub/Sub, but it can be extended to 
 ## Usage
 
 Use Lacuna by running it as a docker container alongside your Pub/Sub emulator. Lacuna will automatically create topics and push subscriptions for each container that has the `lacuna.enabled` label set to `true`. Lacuna will also take care of deleting topics and subscriptions when containers are stopped.
+
+> Make sure to mount the docker socket into the Lacuna container so it can observe container events.
+
+### Example
 
 ```yaml
 version: "3.9"
@@ -27,14 +31,14 @@ services:
             lacuna.subscription.test.endpoint: http://json-server/messages
         ports:
             - "8080:8080"
+        volumes:
+            - ./data/db.json:/data/db.json
     pubsub:
         image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
         command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=pubsub
         restart: unless-stopped
         ports:
             - "8085:8085"
-        volumes:
-            - ./data/db.json:/data/db.json
     lacuna:
         image: ghcr.io/aplr/lacuna:latest
         restart: unless-stopped
