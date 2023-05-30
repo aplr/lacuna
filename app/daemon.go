@@ -7,8 +7,6 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/aplr/lacuna/docker"
-	"github.com/aplr/lacuna/pubsub"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,19 +15,7 @@ type Daemon struct {
 }
 
 func NewDaemon(ctx context.Context) *Daemon {
-	docker, err := docker.NewDocker()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pubsub, err := pubsub.NewPubSub(ctx, "project-id")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	app := NewApp(docker, pubsub)
+	app := NewDefaultApp(ctx)
 
 	return &Daemon{
 		app: app,

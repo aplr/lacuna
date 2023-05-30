@@ -28,6 +28,22 @@ func NewApp(docker docker.Docker, pubsub pubsub.PubSub) *App {
 	}
 }
 
+func NewDefaultApp(ctx context.Context) *App {
+	docker, err := docker.NewDocker()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pubsub, err := pubsub.NewPubSub(ctx, "project-id")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return NewApp(docker, pubsub)
+}
+
 func (app *App) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
