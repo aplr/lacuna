@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/aplr/pubsub-emulator/cmd"
+	"github.com/aplr/lacuna/cmd"
 	log "github.com/sirupsen/logrus"
 )
 

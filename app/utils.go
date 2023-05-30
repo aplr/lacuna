@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aplr/pubsub-emulator/docker"
-	"github.com/aplr/pubsub-emulator/pubsub"
+	"github.com/aplr/lacuna/docker"
+	"github.com/aplr/lacuna/pubsub"
 )
 
 func extractSubscriptions(container docker.Container) []pubsub.Subscription {

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/aplr/pubsub-emulator/docker"
+	"github.com/aplr/lacuna/docker"
 )
 
 func TestExtractSubscriptionsSucceedsWithoutLabels(t *testing.T) {

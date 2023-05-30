@@ -12,7 +12,7 @@ PKG_LIST := $(shell go list ./... | grep -v /vendor/)
 all: build
 
 build:
-	go build -race -o ./bin/pubsub $(GOFLAGS) .
+	go build -race -o ./bin/lacuna $(GOFLAGS) .
 
 staticcheck:
 	staticcheck ${PKG_LIST}

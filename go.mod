@@ -1,4 +1,4 @@
-module github.com/aplr/pubsub-emulator
+module github.com/aplr/lacuna
 
 go 1.20
 

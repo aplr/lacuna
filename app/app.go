@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 
-	"github.com/aplr/pubsub-emulator/docker"
-	"github.com/aplr/pubsub-emulator/pubsub"
+	"github.com/aplr/lacuna/docker"
+	"github.com/aplr/lacuna/pubsub"
 	log "github.com/sirupsen/logrus"
 )
 

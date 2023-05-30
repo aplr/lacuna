@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 
-	"github.com/aplr/pubsub-emulator/docker"
+	"github.com/aplr/lacuna/docker"
 )
 
 var _ = docker.Docker(&mockDocker{})

@@ -6,9 +6,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/aplr/pubsub-emulator/app"
-	"github.com/aplr/pubsub-emulator/docker"
-	"github.com/aplr/pubsub-emulator/pubsub"
+	"github.com/aplr/lacuna/app"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -21,29 +19,13 @@ var daemonCmd = &cobra.Command{
 }
 
 func runDaemon(cmd *cobra.Command, args []string) {
-	log.Infof("PubSub operator version %s starting", cmd.Root().Version)
+	log.Infof("Lacuna version %s starting", cmd.Root().Version)
 
 	ctx := context.Background()
 
-	docker, err := docker.NewDocker()
+	daemon := app.NewDaemon(ctx)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pubsub, err := pubsub.NewPubSub(ctx, "project-id")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	app := app.NewApp(docker, pubsub)
-
-	err = app.Run(ctx)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	daemon.Run(ctx)
 }
 
 func init() {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aplr/pubsub-emulator/docker"
-	"github.com/aplr/pubsub-emulator/pubsub"
+	"github.com/aplr/lacuna/docker"
+	"github.com/aplr/lacuna/pubsub"
 )
 
 func TestNewAppCreatesNewApp(t *testing.T) {
