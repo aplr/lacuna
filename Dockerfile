@@ -1,5 +1,24 @@
-FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+FROM golang:1.20-alpine as builder
 
-ENV PUBSUB_PROJECT_ID=fruitsco
+RUN apk add --no-cache --update build-base
 
-CMD [ "sh", "-c", "gcloud beta emulators pubsub start --project=${PUBSUB_PROJECT_ID}" ]
+WORKDIR /app
+
+COPY go.mod go.sum /app/
+
+RUN go mod download
+
+COPY . /app/
+
+ARG VERSION
+ENV VERSION=${VERSION}
+
+RUN make build
+
+FROM alpine:3.18
+
+ENV PUBSUB_EMULATOR_HOST=127.0.0.1:8085
+
+COPY --from=builder /app/bin/lacuna /usr/local/bin/lacuna
+
+CMD ["lacuna", "daemon", "-vvv"]
