@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aplr/lacuna/docker"
 	"github.com/aplr/lacuna/pubsub"
@@ -28,7 +29,7 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 
 		// Check that the key has the correct number of parts
 		if len(keyParts) != 4 {
-			log.Printf("invalid subscription key: %s, must be in the format 'lacuna.subscription.<name>.<topic|endpoint|deadline>'\n", key)
+			log.Printf("invalid subscription key: %s, must be in the format 'lacuna.subscription.<name>.<option>'\n", key)
 			continue
 		}
 
@@ -54,13 +55,66 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 			subscriptionMap[name].Topic = value
 		case "endpoint":
 			subscriptionMap[name].Endpoint = value
-		case "deadline":
-			deadline, err := strconv.Atoi(value)
+		case "ack-deadline":
+			deadline, err := time.ParseDuration(value)
 			if err != nil {
-				log.Printf("invalid subscription deadline: %s, must be an integer\n", value)
+				log.Printf("invalid ack-deadline: %s, must be a valid duration\n", value)
 				continue
 			}
-			subscriptionMap[name].Deadline = deadline
+			subscriptionMap[name].AckDeadline = deadline
+		case "retain-acked-messages":
+			retain, err := strconv.ParseBool(value)
+			if err != nil {
+				log.Printf("invalid retain-acked-messages value: %s, must be a valid boolean\n", value)
+				continue
+			}
+			subscriptionMap[name].RetainAckedMessages = retain
+		case "retention-duration":
+			duration, err := time.ParseDuration(value)
+			if err != nil {
+				log.Printf("invalid retention-duration: %s, must be a valid duration\n", value)
+				continue
+			}
+			subscriptionMap[name].RetentionDuration = duration
+		case "enable-ordering":
+			enable, err := strconv.ParseBool(value)
+			if err != nil {
+				log.Printf("invalid enable-ordering value: %s, must be a valid boolean\n", value)
+				continue
+			}
+			subscriptionMap[name].EnableOrdering = enable
+		case "expiration-ttl":
+			ttl, err := time.ParseDuration(value)
+			if err != nil {
+				log.Printf("invalid expiration-ttl: %s, must be a valid duration\n", value)
+				continue
+			}
+			subscriptionMap[name].ExpirationTTL = ttl
+		case "filter":
+			subscriptionMap[name].Filter = value
+		case "deliver-exactly-once":
+			deliver, err := strconv.ParseBool(value)
+			if err != nil {
+				log.Printf("invalid deliver-exactly-once value: %s, must be a valid boolean\n", value)
+				continue
+			}
+			subscriptionMap[name].DeliverExactlyOnce = deliver
+		case "dead-letter-topic":
+			subscriptionMap[name].DeadLetterTopic = value
+		case "retry-minimum-backoff":
+			backoff, err := time.ParseDuration(value)
+			if err != nil {
+				log.Printf("invalid retry-minimum-backoff: %s, must be a valid duration\n", value)
+				continue
+			}
+			subscriptionMap[name].RetryMinimumBackoff = &backoff
+		case "retry-maximum-backoff":
+			backoff, err := time.ParseDuration(value)
+			if err != nil {
+				log.Printf("invalid retry-maximum-backoff: %s, must be a valid duration\n", value)
+				continue
+			}
+			subscriptionMap[name].RetryMaximumBackoff = &backoff
 		default:
 			log.Printf("skipping invalid subscription key: %s, must be one of 'topic' or 'endpoint'\n", key)
 		}

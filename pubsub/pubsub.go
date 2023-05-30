@@ -81,8 +81,12 @@ func (ps *pubSubImpl) CreateSubscription(ctx context.Context, subscription Subsc
 		return err
 	}
 
+	// re-create subscription if it already exists.
+	// TODO: evaluate, maybe we should just update the subscription instead?
+	// however, updating a subscription does not update all of the properties
 	if exists {
-		return ps.updateSubscription(ctx, sub, subscription)
+		sub.Delete(ctx)
+		// return ps.updateSubscription(ctx, sub, subscription)
 	}
 
 	return ps.createSubscription(ctx, topic, subscription)
@@ -91,12 +95,7 @@ func (ps *pubSubImpl) CreateSubscription(ctx context.Context, subscription Subsc
 func (ps *pubSubImpl) createSubscription(ctx context.Context, topic *gcps.Topic, subscription Subscription) error {
 	log := ps.log.WithField("subscription_id", subscription.GetSubscriptionID()).WithField("topic", subscription.Topic).WithField("endpoint", subscription.Endpoint)
 
-	_, err := ps.client.CreateSubscription(ctx, subscription.GetSubscriptionID(), gcps.SubscriptionConfig{
-		Topic: topic,
-		PushConfig: gcps.PushConfig{
-			Endpoint: subscription.Endpoint,
-		},
-	})
+	_, err := ps.client.CreateSubscription(ctx, subscription.GetSubscriptionID(), createSubscriptionConfig(topic, subscription))
 
 	if err != nil {
 		log.WithError(err).Error("error creating subscription")
@@ -108,24 +107,20 @@ func (ps *pubSubImpl) createSubscription(ctx context.Context, topic *gcps.Topic,
 	return nil
 }
 
-func (ps *pubSubImpl) updateSubscription(ctx context.Context, sub *gcps.Subscription, subscription Subscription) error {
-	log := ps.log.WithField("subscription_id", subscription.GetSubscriptionID()).WithField("topic", subscription.Topic).WithField("endpoint", subscription.Endpoint)
+// func (ps *pubSubImpl) updateSubscription(ctx context.Context, sub *gcps.Subscription, subscription Subscription) error {
+// 	log := ps.log.WithField("subscription_id", subscription.GetSubscriptionID()).WithField("topic", subscription.Topic).WithField("endpoint", subscription.Endpoint)
 
-	_, err := sub.Update(ctx, gcps.SubscriptionConfigToUpdate{
-		PushConfig: &gcps.PushConfig{
-			Endpoint: subscription.Endpoint,
-		},
-	})
+// 	_, err := sub.Update(ctx, updateSubscriptionConfig(subscription))
 
-	if err != nil {
-		log.WithError(err).Error("error updating subscription")
-		return err
-	}
+// 	if err != nil {
+// 		log.WithError(err).Error("error updating subscription")
+// 		return err
+// 	}
 
-	log.Debug("subscription updated")
+// 	log.Debug("subscription updated")
 
-	return nil
-}
+// 	return nil
+// }
 
 func (ps *pubSubImpl) DeleteSubscription(ctx context.Context, subscription Subscription) error {
 	log := ps.log.WithField("subscription_id", subscription.GetSubscriptionID()).WithField("topic", subscription.Topic).WithField("endpoint", subscription.Endpoint)
@@ -155,3 +150,70 @@ func (ps *pubSubImpl) DeleteSubscription(ctx context.Context, subscription Subsc
 
 	return nil
 }
+
+func createSubscriptionConfig(topic *gcps.Topic, subscription Subscription) gcps.SubscriptionConfig {
+	var deadLetterPolicy *gcps.DeadLetterPolicy
+
+	if subscription.DeadLetterTopic != "" {
+		deadLetterPolicy = &gcps.DeadLetterPolicy{
+			DeadLetterTopic:     subscription.DeadLetterTopic,
+			MaxDeliveryAttempts: subscription.MaxDeadLetterDeliveryAttempts,
+		}
+	}
+
+	retryPolicy := &gcps.RetryPolicy{}
+	if subscription.RetryMinimumBackoff != nil {
+		retryPolicy.MinimumBackoff = *subscription.RetryMinimumBackoff
+	}
+	if subscription.RetryMaximumBackoff != nil {
+		retryPolicy.MaximumBackoff = *subscription.RetryMaximumBackoff
+	}
+
+	return gcps.SubscriptionConfig{
+		Topic: topic,
+		PushConfig: gcps.PushConfig{
+			Endpoint: subscription.Endpoint,
+		},
+		AckDeadline:               subscription.AckDeadline,
+		RetainAckedMessages:       subscription.RetainAckedMessages,
+		RetentionDuration:         subscription.RetentionDuration,
+		EnableMessageOrdering:     subscription.EnableOrdering,
+		ExpirationPolicy:          subscription.ExpirationTTL,
+		Filter:                    subscription.Filter,
+		EnableExactlyOnceDelivery: subscription.DeliverExactlyOnce,
+		DeadLetterPolicy:          deadLetterPolicy,
+		RetryPolicy:               retryPolicy,
+	}
+}
+
+// func updateSubscriptionConfig(subscription Subscription) gcps.SubscriptionConfigToUpdate {
+// 	var deadLetterPolicy *gcps.DeadLetterPolicy
+
+// 	if subscription.DeadLetterTopic != "" {
+// 		deadLetterPolicy = &gcps.DeadLetterPolicy{
+// 			DeadLetterTopic:     subscription.DeadLetterTopic,
+// 			MaxDeliveryAttempts: subscription.MaxDeadLetterDeliveryAttempts,
+// 		}
+// 	}
+
+// 	retryPolicy := &gcps.RetryPolicy{}
+// 	if subscription.RetryMinimumBackoff != nil {
+// 		retryPolicy.MinimumBackoff = *subscription.RetryMinimumBackoff
+// 	}
+// 	if subscription.RetryMaximumBackoff != nil {
+// 		retryPolicy.MaximumBackoff = *subscription.RetryMaximumBackoff
+// 	}
+
+// 	return gcps.SubscriptionConfigToUpdate{
+// 		PushConfig: &gcps.PushConfig{
+// 			Endpoint: subscription.Endpoint,
+// 		},
+// 		AckDeadline:               subscription.AckDeadline,
+// 		RetainAckedMessages:       subscription.RetainAckedMessages,
+// 		RetentionDuration:         subscription.RetentionDuration,
+// 		ExpirationPolicy:          subscription.ExpirationTTL,
+// 		EnableExactlyOnceDelivery: subscription.DeliverExactlyOnce,
+// 		DeadLetterPolicy:          deadLetterPolicy,
+// 		RetryPolicy:               retryPolicy,
+// 	}
+// }

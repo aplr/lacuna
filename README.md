@@ -4,7 +4,7 @@ Lacuna is a Kubernetes-style operator that runs locally on your machine and mana
 
 ## Overview
 
-While testing locally, having a local Pub/Sub emulator helps to replicate the behavior of the production environment. However, it can be tedious to manually create topics and subscriptions for each service that needs to interact with Pub/Sub. For Pub/Sub this is especially true because topics and subscriptions can not be created using the gcloud CLI, but must be created using a proper Pub/Sub API client. Lacuna aims to solve this by creating topics and subscriptions for each container that needs to interact with Pub/Sub just by using docker labels.
+While testing locally, having a local Pub/Sub emulator helps to replicate the behavior of the production environment. However, it can be tedious to manually create topics and subscriptions for each service that needs to interact with Pub/Sub. This is especially true for Pub/Sub because topics and subscriptions can not be created using the gcloud CLI, but must be created using a proper Pub/Sub API client, which causes maintainance overhead for push subscriptions. Lacuna aims to solve this by creating topics and subscriptions for each container that needs to interact with Pub/Sub just by using docker labels.
 
 ### Limitations
 
