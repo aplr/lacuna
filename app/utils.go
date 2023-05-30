@@ -2,6 +2,7 @@ package app
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/aplr/lacuna/docker"
@@ -27,7 +28,7 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 
 		// Check that the key has the correct number of parts
 		if len(keyParts) != 4 {
-			log.Printf("invalid subscription key: %s, must be in the format 'lacuna.subscription.<name>.<topic|endpoint>'\n", key)
+			log.Printf("invalid subscription key: %s, must be in the format 'lacuna.subscription.<name>.<topic|endpoint|deadline>'\n", key)
 			continue
 		}
 
@@ -53,10 +54,16 @@ func extractSubscriptions(container docker.Container) []pubsub.Subscription {
 			subscriptionMap[name].Topic = value
 		case "endpoint":
 			subscriptionMap[name].Endpoint = value
+		case "deadline":
+			deadline, err := strconv.Atoi(value)
+			if err != nil {
+				log.Printf("invalid subscription deadline: %s, must be an integer\n", value)
+				continue
+			}
+			subscriptionMap[name].Deadline = deadline
 		default:
 			log.Printf("skipping invalid subscription key: %s, must be one of 'topic' or 'endpoint'\n", key)
 		}
-
 	}
 
 	// Convert map to slice, only consider valid subscriptions

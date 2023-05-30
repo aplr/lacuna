@@ -7,7 +7,7 @@ type Subscription struct {
 	Name     string
 	Topic    string
 	Endpoint string
-	Deadline uint16
+	Deadline int
 }
 
 func (s *Subscription) GetSubscriptionID() string {
