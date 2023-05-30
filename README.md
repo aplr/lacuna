@@ -1,6 +1,6 @@
-# Lacuna - a Cloud Pub/Sub Docker Operator
+# Lacuna - a Pub/Sub Docker Operator
 
-Lacuna is a Kubernetes-style operator that runs locally on your machine and manages Google Cloud Pub/Sub topics and subscriptions for your docker containers. It is designed to run alongside a local [Pub/Sub emulator](https://cloud.google.com/pubsub/docs/emulator) and manages topics and subscriptions automatically by observing the docker containers running on your machine.
+Lacuna is a Kubernetes-style operator that runs locally on your machine and manages Google Cloud Pub/Sub topics and push subscriptions for your docker containers. It is designed to run alongside a local [Pub/Sub emulator](https://cloud.google.com/pubsub/docs/emulator) and manages topics and subscriptions automatically by observing the docker containers running on your machine.
 
 ## Overview
 
@@ -8,9 +8,11 @@ While testing locally, it is often useful to have a local Pub/Sub emulator runni
 
 ### Limitations
 
-Currently, Lacuna only supports Google Cloud Pub/Sub, but it can be extended to support other messaging systems.
+Currently, Lacuna only supports Google Cloud Pub/Sub, but it can be extended to support other messaging systems. Also, only push subscriptions are supported, as pull subscriptions have to be implemented in the consuming service anyways. However, Lacuna can still be used to create the topics pull subscriptions can subscribe to.
 
 ## Usage
+
+Use Lacuna by running it as a docker container alongside your Pub/Sub emulator. Lacuna will automatically create topics and push subscriptions for each container that has the `lacuna.enabled` label set to `true`. Lacuna will also take care of deleting topics and subscriptions when containers are stopped.
 
 ```yaml
 version: "3.9"
@@ -50,3 +52,7 @@ Lacuna is configured using docker labels. The following labels are supported:
 | `lacuna.subscription.<name>.topic`    | The name of the topic to subscribe to.                                             | Yes      |
 | `lacuna.subscription.<name>.endpoint` | The endpoint to send messages to.                                                  | Yes      |
 | `lacuna.subscription.<name>.deadline` | The number of seconds to wait for an acknowledgement before resending the message. | No       |
+
+## Acknowledgements
+
+Lacuna's label-based configuration is inspired by [Ofelia](https://github.com/mcuadros/ofelia), a job scheduler for docker containers.
