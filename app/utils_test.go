@@ -3,6 +3,7 @@ package app
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/aplr/lacuna/docker"
 )
@@ -46,6 +47,85 @@ func TestExtractSubscriptionsExtractsValidSubscriptions(t *testing.T) {
 	if subscriptions[0].Endpoint != "/messages" {
 		t.Errorf("expected subscription endpoint to be '/messages', got '%s'", subscriptions[0].Endpoint)
 	}
+}
+
+func TestExtractSubscriptionsExtractsValidSubscriptionOptions(t *testing.T) {
+	// arrange
+	container := docker.NewContainer("1", map[string]string{
+		"lacuna.subscription.test.topic":                 "test-topic",
+		"lacuna.subscription.test.endpoint":              "/messages",
+		"lacuna.subscription.test.ack-deadline":          "10s",
+		"lacuna.subscription.test.retain-acked-messages": "true",
+		"lacuna.subscription.test.retention-duration":    "24h",
+		"lacuna.subscription.test.enable-ordering":       "true",
+		"lacuna.subscription.test.expiration-ttl":        "5s",
+		"lacuna.subscription.test.filter":                "foo=bar",
+		"lacuna.subscription.test.deliver-exactly-once":  "true",
+		"lacuna.subscription.test.dead-letter-topic":     "dead-letter-topic",
+		"lacuna.subscription.test.retry-minimum-backoff": "10s",
+		"lacuna.subscription.test.retry-maximum-backoff": "10s",
+	})
+
+	// act
+	subscriptions := extractSubscriptions(container)
+
+	// assert
+	if len(subscriptions) != 1 {
+		t.Errorf("expected 1 subscription, got %d", len(subscriptions))
+	}
+
+	if subscriptions[0].Name != "test" {
+		t.Errorf("expected subscription name to be 'test', got '%s'", subscriptions[0].Name)
+	}
+
+	if subscriptions[0].Topic != "test-topic" {
+		t.Errorf("expected topic to be 'test-topic', got '%s'", subscriptions[0].Topic)
+	}
+
+	if subscriptions[0].Endpoint != "/messages" {
+		t.Errorf("expected endpoint to be '/messages', got '%s'", subscriptions[0].Endpoint)
+	}
+
+	if subscriptions[0].AckDeadline != 10*time.Second {
+		t.Errorf("expected ack-deadline to be 10, got '%d'", subscriptions[0].AckDeadline)
+	}
+
+	if subscriptions[0].RetainAckedMessages != true {
+		t.Errorf("expected retain-acked-messages to be true, got '%t'", subscriptions[0].RetainAckedMessages)
+	}
+
+	if subscriptions[0].RetentionDuration != 24*time.Hour {
+		t.Errorf("expected retention-duration to be 24h, got '%d'", subscriptions[0].RetentionDuration)
+	}
+
+	if subscriptions[0].EnableOrdering != true {
+		t.Errorf("expected enable-ordering to be true, got '%t'", subscriptions[0].EnableOrdering)
+	}
+
+	if subscriptions[0].ExpirationTTL != 5*time.Second {
+		t.Errorf("expected expiration-ttl to be 5s, got '%d'", subscriptions[0].ExpirationTTL)
+	}
+
+	if subscriptions[0].Filter != "foo=bar" {
+		t.Errorf("expected filter to be 'foo=bar', got '%s'", subscriptions[0].Filter)
+	}
+
+	if subscriptions[0].DeliverExactlyOnce != true {
+		t.Errorf("expected deliver-exactly-once to be true, got '%t'", subscriptions[0].DeliverExactlyOnce)
+	}
+
+	if subscriptions[0].DeadLetterTopic != "dead-letter-topic" {
+		t.Errorf("expected dead-letter-topic to be 'dead-letter-topic', got '%s'", subscriptions[0].DeadLetterTopic)
+	}
+
+	if *subscriptions[0].RetryMinimumBackoff != 10*time.Second {
+		t.Errorf("expected retry-minimum-backoff to be 10s, got '%d'", subscriptions[0].RetryMinimumBackoff)
+	}
+
+	if *subscriptions[0].RetryMaximumBackoff != 10*time.Second {
+		t.Errorf("expected retry-maximum-backoff to be 10s, got '%d'", subscriptions[0].RetryMaximumBackoff)
+	}
+
 }
 
 func TestExtractSubscriptionsExtractsMultipleSubscriptions(t *testing.T) {
