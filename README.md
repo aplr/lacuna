@@ -23,16 +23,15 @@ version: "3.9"
 
 services:
     json-server:
-        image: clue/json-server:latest
+        image: codfish/json-server:latest
         restart: unless-stopped
+        ports:
+            - "8080:80"
         labels:
             lacuna.enabled: true
             lacuna.subscription.test.topic: test
             lacuna.subscription.test.endpoint: http://json-server/messages
-        ports:
-            - "8080:8080"
-        volumes:
-            - ./data/db.json:/data/db.json
+            lacuna.subscription.test.ack-deadline: "30s"
     pubsub:
         image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
         command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=pubsub
@@ -40,8 +39,13 @@ services:
         ports:
             - "8085:8085"
     lacuna:
-        image: ghcr.io/aplr/lacuna:latest
+        build: .
         restart: unless-stopped
+        environment:
+            LACUNA_PUBSUB_PROJECT_ID: pubsub
+            # Configure the pubsub client to use the emulator
+            # See https://cloud.google.com/pubsub/docs/emulator#env
+            PUBSUB_EMULATOR_HOST: pubsub:8085 
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
 ```
