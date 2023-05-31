@@ -49,17 +49,15 @@ func (app *App) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	events, err := app.docker.Run(ctx)
-
-	if err != nil {
-		return err
-	}
+	events, errs := app.docker.Run(ctx)
 
 out:
 	for {
 		select {
 		case <-ctx.Done():
 			break out
+		case err := <-errs:
+			return err
 		case evt := <-events:
 			go app.handleContainerEvent(ctx, evt)
 		}
@@ -81,22 +79,27 @@ func (app *App) handleContainerEvent(ctx context.Context, evt docker.Event) {
 	log.Debugf("processing %d subscriptions", len(subscriptions))
 
 	for _, subscription := range subscriptions {
-		app.processSubscription(ctx, subscription, evt.Type)
+		if err := app.processSubscription(ctx, subscription, evt.Type); err != nil {
+			// don't propagate errors, just log them
+			log.WithError(err).Error("failed to process subscription")
+		}
 	}
 }
 
-func (app *App) processSubscription(ctx context.Context, subscription pubsub.Subscription, eventType docker.EventType) {
+func (app *App) processSubscription(ctx context.Context, subscription pubsub.Subscription, eventType docker.EventType) error {
 	ctx, cancel := context.WithTimeout(ctx, 5000*time.Millisecond)
 	defer cancel()
 
 	switch eventType {
 	case docker.EVENT_TYPE_START:
 		if err := app.pubsub.CreateSubscription(ctx, subscription); err != nil {
-			app.log.WithError(err).Error("failed to create subscription")
+			return err
 		}
 	case docker.EVENT_TYPE_STOP:
 		if err := app.pubsub.DeleteSubscription(ctx, subscription); err != nil {
-			app.log.WithError(err).Error("failed to delete subscription")
+			return err
 		}
 	}
+
+	return nil
 }

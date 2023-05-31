@@ -19,7 +19,7 @@ var (
 )
 
 type Docker interface {
-	Run(ctx context.Context) (<-chan Event, error)
+	Run(ctx context.Context) (<-chan Event, <-chan error)
 }
 
 var _ = Docker(&dockerImpl{})
@@ -53,17 +53,23 @@ func NewDockerWithClient(cli client.APIClient) Docker {
 	}
 }
 
-func (docker *dockerImpl) Run(ctx context.Context) (<-chan Event, error) {
-	out := make(chan Event)
+func (docker *dockerImpl) Run(ctx context.Context) (<-chan Event, <-chan error) {
+	messages := make(chan Event)
+	errs := make(chan error, 1)
 
 	go func() {
-		defer close(out)
+		defer close(messages)
+		defer close(errs)
 
-		docker.handleInitialContainers(ctx, out)
-		docker.listenForContainerChanges(ctx, out)
+		if err := docker.handleInitialContainers(ctx, messages); err != nil {
+			errs <- err
+			return
+		}
+
+		docker.listenForContainerChanges(ctx, messages, errs)
 	}()
 
-	return out, nil
+	return messages, errs
 }
 
 func (docker *dockerImpl) handleInitialContainers(
@@ -84,7 +90,7 @@ func (docker *dockerImpl) handleInitialContainers(
 	return nil
 }
 
-func (docker *dockerImpl) listenForContainerChanges(ctx context.Context, out chan Event) {
+func (docker *dockerImpl) listenForContainerChanges(ctx context.Context, messages chan Event, errs chan error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -99,10 +105,16 @@ func (docker *dockerImpl) listenForContainerChanges(ctx context.Context, out cha
 
 	for {
 		select {
+		case <-ctx.Done():
+			// Cancel the listener and return
+			errs <- ctx.Err()
+			return
 		case msg := <-msgChannel:
-			docker.handleMessage(ctx, msg, out)
+			// Publish messages to channel
+			docker.handleMessage(ctx, msg, messages)
 		case err := <-errChannel:
-			docker.handleError(ctx, err)
+			// Log errors and silently return from the listener
+			docker.handleError(ctx, err, errs)
 			return
 		}
 	}
@@ -137,7 +149,8 @@ func (docker *dockerImpl) handleContainer(
 	}
 }
 
-func (docker *dockerImpl) handleError(ctx context.Context, err error) {
+func (docker *dockerImpl) handleError(ctx context.Context, err error, errs chan error) {
 	// TODO: handle error
 	docker.log.WithError(err).Error("error received")
+	errs <- err
 }

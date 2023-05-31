@@ -11,10 +11,10 @@ var _ = docker.Docker(&mockDocker{})
 type mockDocker struct {
 	docker.Docker
 
-	run func(ctx context.Context) (<-chan docker.Event, error)
+	run func(ctx context.Context) (<-chan docker.Event, <-chan error)
 }
 
-func (d *mockDocker) Run(ctx context.Context) (<-chan docker.Event, error) {
+func (d *mockDocker) Run(ctx context.Context) (<-chan docker.Event, <-chan error) {
 	if d.run == nil {
 		panic("no mock function provided")
 	}

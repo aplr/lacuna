@@ -39,9 +39,9 @@ func TestRunReturnsInitialContainers(t *testing.T) {
 			return []types.Container{{ID: "1"}}, nil
 		},
 		events: func(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
-			msg := make(chan events.Message)
-			err := make(chan error)
-			return msg, err
+			msgs := make(chan events.Message)
+			errs := make(chan error)
+			return msgs, errs
 		},
 	}
 
@@ -50,16 +50,15 @@ func TestRunReturnsInitialContainers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	events, err := docker.Run(ctx)
+	events, errs := docker.Run(ctx)
 
-	if err != nil {
+	select {
+	case event := <-events:
+		if event.Container.ID != "1" {
+			t.Errorf("expected container id to be '1', got '%s'", event.Container.ID)
+		}
+	case err := <-errs:
 		t.Errorf("Run() returned error: %v", err)
-	}
-
-	event := <-events
-
-	if event.Container.ID != "1" {
-		t.Errorf("expected container id to be '1', got '%s'", event.Container.ID)
 	}
 }
 
@@ -69,15 +68,15 @@ func TestRunHandlesMessage(t *testing.T) {
 			return []types.Container{}, nil
 		},
 		events: func(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
-			msg := make(chan events.Message)
-			err := make(chan error)
+			msgs := make(chan events.Message)
+			errs := make(chan error)
 			go func() {
-				msg <- events.Message{
+				msgs <- events.Message{
 					Action: "start",
 					Actor:  events.Actor{ID: "1", Attributes: map[string]string{}},
 				}
 			}()
-			return msg, err
+			return msgs, errs
 		},
 	}
 
@@ -86,16 +85,15 @@ func TestRunHandlesMessage(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	events, err := docker.Run(ctx)
+	events, errs := docker.Run(ctx)
 
-	if err != nil {
+	select {
+	case event := <-events:
+		if event.Container.ID != "1" {
+			t.Errorf("expected container id to be '1', got '%s'", event.Container.ID)
+		}
+	case err := <-errs:
 		t.Errorf("Run() returned error: %v", err)
-	}
-
-	event := <-events
-
-	if event.Container.ID != "1" {
-		t.Errorf("expected container id to be '1', got '%s'", event.Container.ID)
 	}
 }
 
@@ -115,19 +113,17 @@ func TestRunHandlesContextClose(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	events, err := docker.Run(ctx)
-
-	if err != nil {
-		t.Errorf("Run() returned error: %v", err)
-	}
+	events, errs := docker.Run(ctx)
 
 	cancel()
 
 	select {
 	case <-ctx.Done():
 		return
-	case <-events:
-		return
+	case evt := <-events:
+		t.Errorf("Run() returned event: %v", evt)
+	case err := <-errs:
+		t.Errorf("Run() returned error: %v", err)
 	}
 }
 
@@ -137,12 +133,12 @@ func TestRunHandlesError(t *testing.T) {
 			return []types.Container{}, nil
 		},
 		events: func(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
-			msg := make(chan events.Message)
-			err := make(chan error)
+			msgs := make(chan events.Message)
+			errs := make(chan error)
 			go func() {
-				err <- errors.New("test error")
+				errs <- errors.New("test error")
 			}()
-			return msg, err
+			return msgs, errs
 		},
 	}
 
@@ -151,11 +147,15 @@ func TestRunHandlesError(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	events, err := docker.Run(ctx)
+	events, errs := docker.Run(ctx)
 
-	if err != nil {
-		t.Errorf("Run() returned error: %v", err)
+	select {
+	case <-ctx.Done():
+		t.Errorf("Run() returned context done")
+		return
+	case evt := <-events:
+		t.Errorf("Run() returned event: %v", evt)
+	case <-errs:
+		return
 	}
-
-	<-events
 }
