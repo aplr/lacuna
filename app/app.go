@@ -97,26 +97,30 @@ func (app *App) handleContainerEvent(ctx context.Context, evt docker.Event) {
 	log.Debugf("processing %d subscriptions", len(subscriptions))
 
 	for _, subscription := range subscriptions {
-		if err := app.processSubscription(ctx, subscription, evt.Type); err != nil {
+		if err := app.processSubscription(ctx, subscription, evt); err != nil {
 			// don't propagate errors, just log them
 			log.WithError(err).Error("failed to process subscription")
 		}
 	}
 }
 
-func (app *App) processSubscription(ctx context.Context, subscription pubsub.Subscription, eventType docker.EventType) error {
+func (app *App) processSubscription(ctx context.Context, subscription pubsub.Subscription, evt docker.Event) error {
+	log := app.log.WithField("container", evt.Container.Name()).WithField("subscription", subscription.Name).WithField("topic", subscription.Topic)
+
 	ctx, cancel := context.WithTimeout(ctx, 5000*time.Millisecond)
 	defer cancel()
 
-	switch eventType {
+	switch evt.Type {
 	case docker.EVENT_TYPE_START:
 		if err := app.pubsub.CreateSubscription(ctx, subscription); err != nil {
 			return err
 		}
+		log.Info("subscription created")
 	case docker.EVENT_TYPE_STOP:
 		if err := app.pubsub.DeleteSubscription(ctx, subscription); err != nil {
 			return err
 		}
+		log.Info("subscription removed")
 	}
 
 	return nil

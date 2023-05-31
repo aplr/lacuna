@@ -26,9 +26,9 @@ func GetConfig() (*Config, error) {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
-			log.WithError(err).Debug("no config file found, using environment variables")
+			log.WithError(err).Debug("no config file found, using env")
 		} else if _, ok := err.(*fs.PathError); ok {
-			log.WithError(err).Debug("specified config file not found, using environment variables")
+			log.WithError(err).Debug("specified config file not found, using env")
 		} else {
 			// Config file was found but another error was produced
 			log.WithError(err).Debug("fatal error config file")
