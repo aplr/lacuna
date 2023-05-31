@@ -20,9 +20,13 @@ func NewDaemon(ctx context.Context) (*Daemon, error) {
 		return nil, err
 	}
 
+	return NewDaemonWithApp(app), nil
+}
+
+func NewDaemonWithApp(app *App) *Daemon {
 	return &Daemon{
 		app: app,
-	}, nil
+	}
 }
 
 func (d *Daemon) Run(ctx context.Context) {
@@ -33,10 +37,12 @@ func (d *Daemon) Run(ctx context.Context) {
 
 	go func() {
 		defer func() { done <- true }()
+		defer cancel()
+
 		err := d.app.Run(ctx)
 
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err).Error("error running lacuna")
 		}
 	}()
 

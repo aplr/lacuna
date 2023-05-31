@@ -214,3 +214,30 @@ func TestExtractSubscriptionsSkipsInvalidLabels(t *testing.T) {
 		t.Errorf("expected 0 subscription, got %d", len(subscriptions))
 	}
 }
+
+func TestExtractSubscriptionsSkipsInvalidValues(t *testing.T) {
+	// arrange
+	container := docker.NewContainer("1", map[string]string{
+		"lacuna.subscription.test.topic":                             "test",
+		"lacuna.subscription.test.endpoint":                          "/messages",
+		"lacuna.subscription.test.ack-deadline":                      "invalid",
+		"lacuna.subscription.test.retain-acked-messages":             "invalid",
+		"lacuna.subscription.test.retention-duration":                "invalid",
+		"lacuna.subscription.test.enable-ordering":                   "invalid",
+		"lacuna.subscription.test.expiration-ttl":                    "invalid",
+		"lacuna.subscription.test.deliver-exactly-once":              "invalid",
+		"lacuna.subscription.test.max-dead-letter-delivery-attempts": "invalid",
+		"lacuna.subscription.test.retry-minimum-backoff":             "invalid",
+		"lacuna.subscription.test.retry-maximum-backoff":             "invalid",
+	})
+
+	// act
+	subscriptions := extractSubscriptions(container)
+
+	// assert
+	if len(subscriptions) != 1 {
+		t.Errorf("expected 1 subscription, got %d", len(subscriptions))
+	}
+
+	// TODO: check if subscription has default values for invalid fields
+}
