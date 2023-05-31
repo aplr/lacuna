@@ -1,5 +1,8 @@
 # Lacuna - a Pub/Sub Docker Operator
 
+[![Test](https://github.com/aplr/lacuna/actions/workflows/test.yml/badge.svg)](https://github.com/aplr/lacuna/actions/workflows/test.yml)
+[![Docker](https://github.com/aplr/lacuna/actions/workflows/docker.yml/badge.svg)](https://github.com/aplr/lacuna/actions/workflows/docker.yml)
+
 Lacuna is a Kubernetes-style operator that runs locally on your machine and manages Google Cloud Pub/Sub topics and push subscriptions for your docker containers. It is designed to run alongside a local [Pub/Sub emulator](https://cloud.google.com/pubsub/docs/emulator) and manages topics and subscriptions automatically by observing the docker containers running on your machine.
 
 ## Overview
