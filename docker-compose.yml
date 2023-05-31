@@ -4,8 +4,10 @@ services:
     lacuna:
         build: .
         restart: unless-stopped
-        # volumes:
-        #     - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            PUBSUB_EMULATOR_HOST: pubsub:8085
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
     json-server:
         image: clue/json-server:latest
         entrypoint: json-server db.json --port 80

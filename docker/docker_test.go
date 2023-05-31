@@ -12,7 +12,7 @@ import (
 
 // TODO: could not work as docker might not be installed in the test execution environment
 func TestNewDockerReturnsDefaultClient(t *testing.T) {
-	_, err := NewDocker()
+	_, err := NewDocker("lacuna")
 
 	if err != nil {
 		t.Errorf("NewDocker() returned error: %v", err)
@@ -26,7 +26,7 @@ func TestNewDockerWithClientReturnsClient(t *testing.T) {
 		t.Errorf("client.NewClientWithOpts() returned error: %v", err)
 	}
 
-	cli := NewDockerWithClient(client)
+	cli := NewDockerWithClient(client, "lacuna")
 
 	if cli == nil {
 		t.Errorf("NewDockerWithClient() returned nil")
@@ -45,7 +45,7 @@ func TestRunReturnsInitialContainers(t *testing.T) {
 		},
 	}
 
-	docker := NewDockerWithClient(cli)
+	docker := NewDockerWithClient(cli, "lacuna")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -80,7 +80,7 @@ func TestRunHandlesMessage(t *testing.T) {
 		},
 	}
 
-	docker := NewDockerWithClient(cli)
+	docker := NewDockerWithClient(cli, "lacuna")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -109,7 +109,7 @@ func TestRunHandlesContextClose(t *testing.T) {
 		},
 	}
 
-	docker := NewDockerWithClient(cli)
+	docker := NewDockerWithClient(cli, "lacuna")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -142,7 +142,7 @@ func TestRunHandlesError(t *testing.T) {
 		},
 	}
 
-	docker := NewDockerWithClient(cli)
+	docker := NewDockerWithClient(cli, "lacuna")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

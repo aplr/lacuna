@@ -14,7 +14,11 @@ func TestNewAppCreatesNewApp(t *testing.T) {
 	docker := &mockDocker{}
 	pubsub := &mockPubSub{}
 
-	app := NewApp(docker, pubsub)
+	app, err := NewApp(docker, pubsub)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	if app.docker != docker {
 		t.Errorf("Expected docker to be %v, got %v", docker, app.docker)
@@ -26,7 +30,11 @@ func TestNewAppCreatesNewApp(t *testing.T) {
 }
 
 func TestNewDefaultAppCreatesNewApp(t *testing.T) {
-	app := NewDefaultApp(context.Background())
+	app, err := NewDefaultApp(context.Background())
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	if app.docker == nil {
 		t.Errorf("Expected docker to be non-nil, got %v", app.docker)
@@ -46,13 +54,17 @@ func TestRunClosesOnContextCancel(t *testing.T) {
 	}
 	pubsub := &mockPubSub{}
 
-	app := NewApp(docker, pubsub)
+	app, err := NewApp(docker, pubsub)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// act
 	cancel()
-	err := app.Run(ctx)
+	err = app.Run(ctx)
 
 	// assert
 	if err != nil {
@@ -73,10 +85,14 @@ func TestRunPropagatesErrorFromDocker(t *testing.T) {
 	}
 	pubsub := &mockPubSub{}
 
-	app := NewApp(docker, pubsub)
+	app, err := NewApp(docker, pubsub)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	// act
-	err := app.Run(context.Background())
+	err = app.Run(context.Background())
 
 	// assert
 	if err == nil {
@@ -100,7 +116,11 @@ func TestRunHandlesContainerStartEvent(t *testing.T) {
 		},
 	}
 
-	app := NewApp(d, p)
+	app, err := NewApp(d, p)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -147,7 +167,11 @@ func TestRunHandlesContainerStopEvent(t *testing.T) {
 		},
 	}
 
-	app := NewApp(d, p)
+	app, err := NewApp(d, p)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -194,7 +218,11 @@ func TestRunHandlesNoSubscriptions(t *testing.T) {
 		},
 	}
 
-	app := NewApp(d, p)
+	app, err := NewApp(d, p)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
@@ -235,7 +263,11 @@ func TestRunHandlesCreateSubascriptionError(t *testing.T) {
 		},
 	}
 
-	app := NewApp(d, p)
+	app, err := NewApp(d, p)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
@@ -273,7 +305,11 @@ func TestRunHandlesDeleteSubascriptionError(t *testing.T) {
 		},
 	}
 
-	app := NewApp(d, p)
+	app, err := NewApp(d, p)
+
+	if err != nil {
+		t.Errorf("Expected err to be nil, got %v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()

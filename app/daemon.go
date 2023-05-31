@@ -13,12 +13,16 @@ type Daemon struct {
 	app *App
 }
 
-func NewDaemon(ctx context.Context) *Daemon {
-	app := NewDefaultApp(ctx)
+func NewDaemon(ctx context.Context) (*Daemon, error) {
+	app, err := NewDefaultApp(ctx)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return &Daemon{
 		app: app,
-	}
+	}, nil
 }
 
 func (d *Daemon) Run(ctx context.Context) {

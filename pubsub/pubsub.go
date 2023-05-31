@@ -19,8 +19,8 @@ type pubSubImpl struct {
 	client *gcps.Client
 }
 
-func NewPubSub(ctx context.Context, projectId string) (PubSub, error) {
-	client, err := gcps.NewClient(ctx, projectId)
+func NewPubSub(ctx context.Context, config *Config) (PubSub, error) {
+	client, err := gcps.NewClient(ctx, config.ProjectID)
 
 	if err != nil {
 		return nil, err

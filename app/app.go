@@ -15,34 +15,52 @@ var (
 
 type App struct {
 	log    *log.Entry
+	config *Config
 	docker docker.Docker
 	pubsub pubsub.PubSub
 }
 
-func NewApp(docker docker.Docker, pubsub pubsub.PubSub) *App {
+func NewApp(docker docker.Docker, pubsub pubsub.PubSub) (*App, error) {
 	log := log.WithField("component", "app")
+
+	config, err := GetConfig()
+
+	if err != nil {
+		return nil, err
+	}
 
 	return &App{
 		log:    log,
+		config: config,
 		docker: docker,
 		pubsub: pubsub,
-	}
+	}, nil
 }
 
-func NewDefaultApp(ctx context.Context) *App {
-	docker, err := docker.NewDocker()
+func NewDefaultApp(ctx context.Context) (*App, error) {
+	app, err := NewApp(nil, nil)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pubsub, err := pubsub.NewPubSub(ctx, "pubsub")
+	docker, err := docker.NewDocker(app.config.LabelPrefix)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return NewApp(docker, pubsub)
+	app.docker = docker
+
+	pubsub, err := pubsub.NewPubSub(ctx, app.config.PubSub)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app.pubsub = pubsub
+
+	return app, nil
 }
 
 func (app *App) Run(ctx context.Context) error {

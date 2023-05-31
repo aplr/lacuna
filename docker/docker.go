@@ -12,8 +12,6 @@ import (
 )
 
 var (
-	labelPrefix    = "lacuna"
-	filterLabel    = labelPrefix + ".enabled=true"
 	startEventName = "start" // TODO: evaluate event
 	stopEventName  = "stop"  // TODO: evaluate event
 )
@@ -27,11 +25,12 @@ var _ = Docker(&dockerImpl{})
 type dockerImpl struct {
 	Docker
 
-	log *log.Entry
-	cli client.APIClient
+	labelPrefix string
+	log         *log.Entry
+	cli         client.APIClient
 }
 
-func NewDocker() (Docker, error) {
+func NewDocker(labelPrefix string) (Docker, error) {
 	cli, err := client.NewClientWithOpts(
 		client.FromEnv,
 		client.WithAPIVersionNegotiation(),
@@ -41,15 +40,16 @@ func NewDocker() (Docker, error) {
 		return nil, err
 	}
 
-	return NewDockerWithClient(cli), nil
+	return NewDockerWithClient(cli, labelPrefix), nil
 }
 
-func NewDockerWithClient(cli client.APIClient) Docker {
+func NewDockerWithClient(cli client.APIClient, labelPrefix string) Docker {
 	log := log.WithField("component", "docker")
 
 	return &dockerImpl{
-		cli: cli,
-		log: log,
+		cli:         cli,
+		log:         log,
+		labelPrefix: labelPrefix,
 	}
 }
 
@@ -78,7 +78,7 @@ func (docker *dockerImpl) handleInitialContainers(
 ) error {
 	containers, _ := docker.cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(
-			filters.KeyValuePair{Key: "label", Value: filterLabel},
+			filters.KeyValuePair{Key: "label", Value: docker.filterLabel()},
 		),
 	})
 
@@ -97,7 +97,7 @@ func (docker *dockerImpl) listenForContainerChanges(ctx context.Context, message
 	msgChannel, errChannel := docker.cli.Events(ctx, types.EventsOptions{
 		Filters: filters.NewArgs(
 			filters.KeyValuePair{Key: "type", Value: "container"},
-			filters.KeyValuePair{Key: "label", Value: filterLabel},
+			filters.KeyValuePair{Key: "label", Value: docker.filterLabel()},
 			filters.KeyValuePair{Key: "event", Value: startEventName},
 			filters.KeyValuePair{Key: "event", Value: stopEventName},
 		),
@@ -153,4 +153,8 @@ func (docker *dockerImpl) handleError(ctx context.Context, err error, errs chan 
 	// TODO: handle error
 	docker.log.WithError(err).Error("error received")
 	errs <- err
+}
+
+func (docker *dockerImpl) filterLabel() string {
+	return docker.labelPrefix + ".enabled=true"
 }

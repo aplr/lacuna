@@ -10,7 +10,7 @@ func TestNewPubSubReturnsClient(t *testing.T) {
 	ctx := context.Background()
 
 	// act
-	_, err := NewPubSub(ctx, "test")
+	_, err := NewPubSub(ctx, &Config{ProjectID: "test"})
 
 	// assert
 	if err != nil {

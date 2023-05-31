@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"strings"
 
@@ -38,29 +37,13 @@ func init() {
 
 func initConfig() {
 	// Environment
-	// viper.SetEnvPrefix("lacuna")
+	viper.SetEnvPrefix("lacuna")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.SetConfigName("default")
-	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 
 	// Logging
 	log.SetLevel(logVerbosityToLevel(verbosity))
-
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error if desired
-			log.Debug("no config file found, using environment variables")
-		} else if _, ok := err.(*fs.PathError); ok {
-			log.Debug("specified config file not found, using environment variables")
-		} else {
-			// Config file was found but another error was produced
-			panic(fmt.Errorf("fatal error config file: %w", err))
-		}
-	} else {
-		log.Infof("config loaded from %s.", viper.ConfigFileUsed())
-	}
 }
 
 func logVerbosityToLevel(count int) log.Level {

@@ -23,7 +23,11 @@ func runDaemon(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
-	daemon := app.NewDaemon(ctx)
+	daemon, err := app.NewDaemon(ctx)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	daemon.Run(ctx)
 }
