@@ -1,23 +1,22 @@
 version: "3.9"
 
 services:
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    environment:
-      DHPARAM_GENERATION: false
-    ports:
-      - "5080:80"
-      - "5443:443"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    labels:
-      lacuna.enabled: true
-      lacuna.subscription.test.topic: test
-      lacuna.subscription.test.endpoint: http://nginx/messages
-  pubsub:
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
-    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=pubsub
-    restart: unless-stopped
-    ports:
-      - "8085:8085"
+    json-server:
+        image: clue/json-server:latest
+        entrypoint: json-server db.json --port 80
+        restart: unless-stopped
+        ports:
+            - "8080:80"
+        volumes:
+            - ./data/db.json:/data/db.json
+        labels:
+            lacuna.enabled: true
+            lacuna.subscription.test.topic: test
+            lacuna.subscription.test.endpoint: http://json-server/messages
+            lacuna.subscription.test.ack-deadline: "30s"
+    pubsub:
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+        command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=pubsub
+        restart: unless-stopped
+        ports:
+            - "8085:8085"

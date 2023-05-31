@@ -23,7 +23,7 @@ version: "3.9"
 
 services:
     json-server:
-        image: ghcr.io/clue/json-server:latest
+        image: clue/json-server:latest
         restart: unless-stopped
         labels:
             lacuna.enabled: true
