@@ -130,7 +130,6 @@ func TestExtractSubscriptionsExtractsValidSubscriptionOptions(t *testing.T) {
 	if *subscriptions[0].RetryMaximumBackoff != 10*time.Second {
 		t.Errorf("expected retry-maximum-backoff to be 10s, got '%d'", subscriptions[0].RetryMaximumBackoff)
 	}
-
 }
 
 func TestExtractSubscriptionsExtractsMultipleSubscriptions(t *testing.T) {
